@@ -15,6 +15,8 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended:true}));
 console.log(`Web server is running at http://localhost:${portNumber}`);
 
+
+
 const data = [];
 let findStr;
 app.get("/", (request, response) => {
@@ -28,17 +30,47 @@ app.get("/weather", (request, response) => {
 
 mongoData = {};
 
+function apiCall(input){
+    console.log("Making API call...");
+    const fetch = require('node-fetch'); // import the fetch function
+    const API_KEY = "66b66d16992dabb9bc78dbc6a3b90a70"; // replace with your own API key
+    const city = "London"; // replace with the city you want to get weather data for
+
+    // create the URL for the API request
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}`;
+    let ans = 0;
+    // make the API request
+    fetch(url)
+    .then(response => response.json()) // parse the response as JSON
+    .then(data => {
+        // do something with the weather data here
+        console.log(data);
+        console.log("Temp in Kelvin: " , data.main.temp);
+        console.log("Temp in farenheit: " , (((data.main.temp-273)*1.8)+32));
+        ans = (((data.main.temp-273)*1.8)+32);
+    })
+    .catch(error => {
+        // handle any errors here
+        console.error(error);
+    });
+    return ans;
+}
+
 app.post("/weather", (request, response) => {
 
   let {city} =  request.body;
-  mongoData = {city};
+    // get temp from weather api
+  let temperature = apiCall();
+  console.log("In post the api recieves: ", temperature);
+  mongoData = {city, temperature};
 
   // send to mongoDB
   main();
   const variables = {
-    city: city
+    city: city,
+    temp: temperature
   };
-	response.render("weatherConfirmation", variables);
+    response.render("weatherConfirmation", variables);
 });
 
 // MONGODB
@@ -48,14 +80,14 @@ const username = encodeURIComponent("tushardubey");
 const password = encodeURIComponent("cmsc335fall2022");
 /* Our database and collection */
 const databaseAndCollection = {db: process.env.MONGO_DB_NAME, collection:process.env.MONGO_COLLECTION};
-
-
-
 const { MongoClient, ServerApiVersion } = require('mongodb');
+
+
 
 // clear();
 async function main() {
-  console.log(mongoData);
+    console.log(mongoData);
+    // let temperature = apiCall();
     // alert("ENTERED MAIN FUNCTION");
     const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
     const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -63,9 +95,9 @@ async function main() {
     try {
         await client.connect();
         /* Inserting one person */
-        console.log("***** Inserting one person *****");
-        let person = {city: mongoData.city};
-        await insertPerson(client, databaseAndCollection, person);
+        // console.log("***** Inserting one person *****");
+        // let person = {city: mongoData.city, temp:temperature};
+        // await insertPerson(client, databaseAndCollection, person);
 
     } catch (e) {
         console.error(e);
