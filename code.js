@@ -30,21 +30,15 @@ mongoData = {};
 
 app.post("/weather", (request, response) => {
 
-  let {name, gpa, email, background} =  request.body;
-  mongoData = {name, gpa, email, background};
+  let {city} =  request.body;
+  mongoData = {city};
 
   // send to mongoDB
   main();
-  // Change to get from mongoDB
-  // mongoRetrieved = getData();
-  // mostRecentInput = mongoRetrieved[mongoRetrieved.length-1];
   const variables = {
-    name: name,
-    email: email,
-    gpa: gpa,
-    background: background
+    city: city
   };
-	response.render("applicationConfirmation", variables);
+	response.render("weatherConfirmation", variables);
 });
 
 // MONGODB
