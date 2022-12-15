@@ -94,7 +94,7 @@ async function main() {
     
     try {
         await client.connect();
-        /* Inserting one person */
+        /* Insert to MongoDB */
         // console.log("***** Inserting one person *****");
         // let person = {city: mongoData.city, temp:temperature};
         // await insertPerson(client, databaseAndCollection, person);
@@ -131,35 +131,7 @@ async function insertPerson(client, databaseAndCollection, newPerson) {
     console.log(`Person entry created with id ${result.insertedId}`);
 }
 
-async function insertMultiplePeople(client, databaseAndCollection, moviesArray) {
-    const result = await client.db(databaseAndCollection.db)
-                        .collection(databaseAndCollection.collection)
-                        .insertMany(moviesArray);
 
-    console.log(`Inserted ${result.insertedCount} movies`);
-}
-
-async function getData(){
-  const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-
-  try {
-    await client.connect();
-    let filter = {};
-    const cursor = client.db(databaseAndCollection.db)
-    .collection(databaseAndCollection.collection)
-    .find(filter);
-    
-    const result = await cursor.toArray();
-    console.log(`Found: ${result.length} people`);
-    console.log(result);
-    return result;
-  } catch (e) {
-      console.error(e);
-  } finally {
-      await client.close();
-  }
-}
 
 async function clear(){
   const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
@@ -215,43 +187,4 @@ async function lookUpMany(client, databaseAndCollection, min) {
   const result = await cursor.toArray();
   console.log(result);
   return result;
-}
-
-//driver
-// mongoRetrieved = getData();
-// mostRecentInput = mongoRetrieved[mongoRetrieved.length-1];
-// console.log(mongoRetrieved);
-// main().catch(console.error);
-
-async function findEmail(emailIn) {
-  const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-  let ans;
-  try {
-      await client.connect();
-              console.log("***** Looking up one movie *****");
-              let email = emailIn;
-              ans = await lookUpOneEntry(client, databaseAndCollection, email);
-              console.log(ans);
-
-  } catch (e) {
-      console.error(e);
-  } finally {
-      await client.close();
-  }
-   return ans;
-}
-
-async function lookUpOneEntry(client, databaseAndCollection, emailIn) {
-  let filter = {email: emailIn};
-  const result = await client.db(databaseAndCollection.db)
-                      .collection(databaseAndCollection.collection)
-                      .findOne(filter);
-
- if (result) {
-     console.log(result);
-     return result;
- } else {
-     console.log(`No movie found with name ${email}`);
- }
 }
