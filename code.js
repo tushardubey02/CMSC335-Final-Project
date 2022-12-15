@@ -62,18 +62,9 @@ async function main() {
     
     try {
         await client.connect();
-
-        // Clear
-        // await client.connect();
-        // console.log("***** Clearing Collection *****");
-        // const result = await client.db(databaseAndCollection.db)
-        // .collection(databaseAndCollection.collection)
-        // .deleteMany({});
-        // console.log(`Deleted documents ${result.deletedCount}`);
-
         /* Inserting one person */
         console.log("***** Inserting one person *****");
-        let person = {name: mongoData.name, gpa: mongoData.gpa, email:mongoData.email, background:mongoData.background};
+        let person = {city: mongoData.city};
         await insertPerson(client, databaseAndCollection, person);
 
     } catch (e) {
