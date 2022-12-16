@@ -71,13 +71,16 @@ async function main() {
     // alert("ENTERED MAIN FUNCTION");
     const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
     const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-    
+    console.log(mongoData.city, " ", mongoData.temperature);
+    // Create copies to send to mongoDB
+    let x = mongoData.city;
+    let y = mongoData.temperature;
     try {
         await client.connect();
-        /* Inserting one person */
-        // console.log("***** Inserting one person *****");
-        // let person = {city: mongoData.city, temp:temperature};
-        // await insertPerson(client, databaseAndCollection, person);
+        /* Inserting to mongoDB */
+        console.log("***** Inserting to MongoDB *****");
+        let person = {city: x, temp:y};
+        await insertPerson(client, databaseAndCollection, person);
 
     } catch (e) {
         console.error(e);
@@ -94,8 +97,8 @@ async function main() {
       .find(filter);
       
       const result = await cursor.toArray();
-      // console.log(`Found: ${result.length} people`);
-      // console.log(result);
+      console.log(`Found: ${result.length} people`);
+      console.log(result);
       // document.writeln(result);
     } catch (e) {
         console.error(e);
@@ -140,3 +143,26 @@ async function getData(){
       await client.close();
   }
 }
+
+// Clears mongoDB collection
+async function clear(){
+    const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
+    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+    
+    try {
+        await client.connect();
+        // Clear
+        await client.connect();
+        // console.log("***** Clearing Collection *****");
+        const result = await client.db(databaseAndCollection.db)
+        .collection(databaseAndCollection.collection)
+        .deleteMany({});
+        // console.log(`Deleted documents ${result.deletedCount}`);
+        return result.deletedCount;
+  
+    } catch (e) {
+        console.error(e);
+    } finally {
+        await client.close();
+    }
+  }
