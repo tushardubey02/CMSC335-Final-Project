@@ -53,6 +53,18 @@ app.post("/weather", (request, response) => {
     });
 });
 
+app.get("/queries", (request, response) => {
+	response.render("queries");
+});
+
+app.post("/queries", (request, response) => {
+    let result = getData().then();
+    const variables = {
+        queries: result
+    }
+    response.render("queriesDisplay", variables);
+});
+
 // MONGODB
 require("dotenv").config({ path: path.resolve(__dirname, 'credentialsDontPost/.env') });
 
@@ -134,7 +146,7 @@ async function getData(){
     .find(filter);
     
     const result = await cursor.toArray();
-    console.log(`Found: ${result.length} people`);
+    console.log(`Found: ${result.length} items`);
     console.log(result);
     return result;
   } catch (e) {
