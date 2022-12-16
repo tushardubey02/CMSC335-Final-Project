@@ -52,6 +52,19 @@ app.post("/weather", (request, response) => {
     });
 });
 
+app.get("/queries", async (request, response) => {
+    let result = await getData();
+    let tableData = "";
+    //reverse to get most recent first
+    result.reverse().forEach((element) => {
+        tableData += `<tr><td>${element.city}</td><td>${element.temp}</td></tr>`;
+    });
+    const variables = {
+        queries: tableData
+    }
+    response.render("queries", variables);
+});
+
 // MONGODB
 require("dotenv").config({ path: path.resolve(__dirname, 'credentialsDontPost/.env') });
 
@@ -65,18 +78,18 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 
 // clear();
 async function main() {
-    console.log(mongoData);
-    // let temperature = apiCall();
-    // alert("ENTERED MAIN FUNCTION");
     const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
     const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-    
+    console.log(mongoData.city, " ", mongoData.temperature);
+    // Create copies to send to mongoDB
+    let x = mongoData.city;
+    let y = mongoData.temperature;
     try {
         await client.connect();
-        /* Inserting one person */
-        // console.log("***** Inserting one person *****");
-        // let person = {city: mongoData.city, temp:temperature};
-        // await insertPerson(client, databaseAndCollection, person);
+        /* Inserting to mongoDB */
+        console.log("***** Inserting to MongoDB *****");
+        let person = {city: x, temp:y};
+        await insertPerson(client, databaseAndCollection, person);
 
     } catch (e) {
         console.error(e);
@@ -93,8 +106,8 @@ async function main() {
       .find(filter);
       
       const result = await cursor.toArray();
-      // console.log(`Found: ${result.length} people`);
-      // console.log(result);
+      console.log(`Found: ${result.length} people`);
+      console.log(result);
       // document.writeln(result);
     } catch (e) {
         console.error(e);
@@ -102,20 +115,6 @@ async function main() {
         await client.close();
     }
 
-}
-
-async function insertPerson(client, databaseAndCollection, newPerson) {
-    const result = await client.db(databaseAndCollection.db).collection(databaseAndCollection.collection).insertOne(newPerson);
-
-    console.log(`Person entry created with id ${result.insertedId}`);
-}
-
-async function insertMultiplePeople(client, databaseAndCollection, moviesArray) {
-    const result = await client.db(databaseAndCollection.db)
-                        .collection(databaseAndCollection.collection)
-                        .insertMany(moviesArray);
-
-    console.log(`Inserted ${result.insertedCount} movies`);
 }
 
 async function getData(){
@@ -130,8 +129,8 @@ async function getData(){
     .find(filter);
     
     const result = await cursor.toArray();
-    console.log(`Found: ${result.length} people`);
-    console.log(result);
+    // console.log(`Found: ${result.length} items`);
+    // console.log(result);
     return result;
   } catch (e) {
       console.error(e);
@@ -139,3 +138,4 @@ async function getData(){
       await client.close();
   }
 }
+
