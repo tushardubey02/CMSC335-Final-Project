@@ -6,6 +6,7 @@ const app = express(); /* app is a request handler function */
 const portNumber = 5000;
 // testing this out
 const bodyParser = require('body-parser')
+const fetch = require('node-fetch'); // import the fetch function
 // let jsonParser = bodyParser.json()
 app.listen(portNumber);
 /* directory where templates will reside */
@@ -17,8 +18,7 @@ console.log(`Web server is running at http://localhost:${portNumber}`);
 
 
 
-const data = [];
-let findStr;
+// let temperature = 0;
 app.get("/", (request, response) => {
 	/* Generating the HTML */
 	response.render("index");
@@ -28,49 +28,29 @@ app.get("/weather", (request, response) => {
 	response.render("weather");
 });
 
-mongoData = {};
-
-function apiCall(input){
-    console.log("Making API call...");
-    const fetch = require('node-fetch'); // import the fetch function
-    const API_KEY = "66b66d16992dabb9bc78dbc6a3b90a70"; // replace with your own API key
-    const city = "London"; // replace with the city you want to get weather data for
-
-    // create the URL for the API request
+app.post("/weather", (request, response) => {
+    let {city} =  request.body;
+    const API_KEY = "66b66d16992dabb9bc78dbc6a3b90a70";
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}`;
-    let ans = 0;
-    // make the API request
     fetch(url)
     .then(response => response.json()) // parse the response as JSON
     .then(data => {
-        // do something with the weather data here
+        //print
         console.log(data);
-        console.log("Temp in Kelvin: " , data.main.temp);
-        console.log("Temp in farenheit: " , (((data.main.temp-273)*1.8)+32));
-        ans = (((data.main.temp-273)*1.8)+32);
+        let temperature = (((data.main.temp-273.15)*1.8)+32);
+        const variables = {
+            city: city,
+            temp: temperature
+        };
+        response.render("weatherConfirmation", variables);
+        // send to mongoDB
+        mongoData = {city, temperature};
+        main();
     })
     .catch(error => {
         // handle any errors here
         console.error(error);
     });
-    return ans;
-}
-
-app.post("/weather", (request, response) => {
-
-  let {city} =  request.body;
-    // get temp from weather api
-  let temperature = apiCall();
-  console.log("In post the api recieves: ", temperature);
-  mongoData = {city, temperature};
-
-  // send to mongoDB
-  main();
-  const variables = {
-    city: city,
-    temp: temperature
-  };
-    response.render("weatherConfirmation", variables);
 });
 
 // MONGODB
@@ -159,99 +139,4 @@ async function getData(){
   } finally {
       await client.close();
   }
-}
-
-async function clear(){
-  const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-  
-  try {
-      await client.connect();
-      // Clear
-      await client.connect();
-      // console.log("***** Clearing Collection *****");
-      const result = await client.db(databaseAndCollection.db)
-      .collection(databaseAndCollection.collection)
-      .deleteMany({});
-      // console.log(`Deleted documents ${result.deletedCount}`);
-      return result.deletedCount;
-
-  } catch (e) {
-      console.error(e);
-  } finally {
-      await client.close();
-  }
-}
-
-async function find(min){
-  const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-
-  try {
-    await client.connect();
-            // console.log("***** Looking up one movie *****");
-            // let movieName = "Batman";
-            // await lookUpOneEntry(client, databaseAndCollection, movieName);
-
-            console.log("***** Looking up many *****");
-            await lookUpMany(client, databaseAndCollection, min.gpa);
-  } catch (e) {
-      console.error(e);
-  } finally {
-      await client.close();
-  }
-
-}
-
-async function lookUpMany(client, databaseAndCollection, min) {
-  // console.log(min);
-  let filter = {gpa : { $gte: min}};
-  const cursor = client.db(databaseAndCollection.db)
-  .collection(databaseAndCollection.collection)
-  .find(filter);
-
-  // Some Additional comparison query operators: $eq, $gt, $lt, $lte, $ne (not equal)
-  // Full listing at https://www.mongodb.com/docs/manual/reference/operator/query-comparison/
-  const result = await cursor.toArray();
-  console.log(result);
-  return result;
-}
-
-//driver
-// mongoRetrieved = getData();
-// mostRecentInput = mongoRetrieved[mongoRetrieved.length-1];
-// console.log(mongoRetrieved);
-// main().catch(console.error);
-
-async function findEmail(emailIn) {
-  const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-  let ans;
-  try {
-      await client.connect();
-              console.log("***** Looking up one movie *****");
-              let email = emailIn;
-              ans = await lookUpOneEntry(client, databaseAndCollection, email);
-              console.log(ans);
-
-  } catch (e) {
-      console.error(e);
-  } finally {
-      await client.close();
-  }
-   return ans;
-}
-
-async function lookUpOneEntry(client, databaseAndCollection, emailIn) {
-  let filter = {email: emailIn};
-  const result = await client.db(databaseAndCollection.db)
-                      .collection(databaseAndCollection.collection)
-                      .findOne(filter);
-
- if (result) {
-     console.log(result);
-     return result;
- } else {
-     console.log(`No movie found with name ${email}`);
- }
 }
