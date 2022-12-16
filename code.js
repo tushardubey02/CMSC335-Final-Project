@@ -55,9 +55,9 @@ app.post("/weather", (request, response) => {
 app.get("/queries", async (request, response) => {
     let result = await getData();
     let tableData = "";
-    //reverse to get most recent first
-    result.reverse().forEach((element) => {
-        tableData += `<tr><td>${element.city}</td><td>${element.temp}</td></tr>`;
+    //most recent element first
+    result.forEach((element) => {
+        tableData = `<tr><td>${element.city}</td><td>${element.temp}</td></tr>` + tableData;
     });
     const variables = {
         queries: tableData
