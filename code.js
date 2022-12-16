@@ -14,11 +14,10 @@ app.set("views", path.resolve(__dirname, "templates"));
 /* view/templating engine */
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended:true}));
+app.use(express.static("public"));
+
 console.log(`Web server is running at http://localhost:${portNumber}`);
 
-
-
-// let temperature = 0;
 app.get("/", (request, response) => {
 	/* Generating the HTML */
 	response.render("index");
@@ -37,7 +36,7 @@ app.post("/weather", (request, response) => {
     .then(data => {
         //print
         console.log(data);
-        let temperature = (((data.main.temp-273.15)*1.8)+32);
+        let temperature = Math.round(((data.main.temp-273.15)*1.8)+32);
         const variables = {
             city: city,
             temp: temperature
