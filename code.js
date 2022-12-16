@@ -52,19 +52,6 @@ app.post("/weather", (request, response) => {
     });
 });
 
-app.get("/queries", async (request, response) => {
-    let result = await getData();
-    let tableData = "";
-    //most recent element first
-    result.forEach((element) => {
-        tableData = `<tr><td>${element.city}</td><td>${element.temp}</td></tr>` + tableData;
-    });
-    const variables = {
-        queries: tableData
-    }
-    response.render("queries", variables);
-});
-
 // MONGODB
 require("dotenv").config({ path: path.resolve(__dirname, 'credentialsDontPost/.env') });
 
@@ -74,6 +61,29 @@ const password = encodeURIComponent("cmsc335fall2022");
 const databaseAndCollection = {db: process.env.MONGO_DB_NAME, collection:process.env.MONGO_COLLECTION};
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
+const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+app.get("/queries", async (request, response) => {
+    try {
+        await client.connect();
+
+        let result = await getData(client, databaseAndCollection);
+        let tableData = "";
+        //most recent element first
+        result.forEach((element) => {
+            tableData = `<tr><td>${element.city}</td><td>${element.temp}</td></tr>` + tableData;
+        });
+        const variables = {
+            queries: tableData
+        }
+        response.render("queries", variables);
+    } catch (e) {
+        console.error(e);
+    } finally {
+        await client.close();
+    }
+});
 
 
 // clear();
@@ -104,12 +114,8 @@ async function insertData(client, databaseAndCollection, data) {
     console.log(`Person entry created with id ${result.insertedId}`);
 }
 
-async function getData() {
-  const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-
-  try {
-    await client.connect();
+async function getData(client, databaseAndCollection) {
+  
     let filter = {};
     const cursor = client.db(databaseAndCollection.db)
     .collection(databaseAndCollection.collection)
@@ -119,10 +125,5 @@ async function getData() {
     // console.log(`Found: ${result.length} items`);
     // console.log(result);
     return result;
-  } catch (e) {
-      console.error(e);
-  } finally {
-      await client.close();
-  }
 }
 
