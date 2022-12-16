@@ -37,7 +37,7 @@ app.post("/weather", (request, response) => {
     .then(data => {
         //print
         console.log(data);
-        let temperature = (((data.main.temp-273.15)*1.8)+32);
+        let temperature = Math.round((((data.main.temp-273.15)*1.8)+32));
         const variables = {
             city: city,
             temp: temperature
