@@ -88,36 +88,23 @@ async function main() {
         await client.connect();
         /* Inserting to mongoDB */
         console.log("***** Inserting to MongoDB *****");
-        let person = {city: x, temp:y};
-        await insertPerson(client, databaseAndCollection, person);
+        let data = {city: x, temp:y};
+        await insertData(client, databaseAndCollection, data);
 
     } catch (e) {
         console.error(e);
     } finally {
         await client.close();
     }
-
-    // list all people
-    try {
-      await client.connect();
-      let filter = {};
-      const cursor = client.db(databaseAndCollection.db)
-      .collection(databaseAndCollection.collection)
-      .find(filter);
-      
-      const result = await cursor.toArray();
-      console.log(`Found: ${result.length} people`);
-      console.log(result);
-      // document.writeln(result);
-    } catch (e) {
-        console.error(e);
-    } finally {
-        await client.close();
-    }
-
 }
 
-async function getData(){
+async function insertData(client, databaseAndCollection, data) {
+    const result = await client.db(databaseAndCollection.db).collection(databaseAndCollection.collection).insertOne(data);
+
+    console.log(`Person entry created with id ${result.insertedId}`);
+}
+
+async function getData() {
   const uri = `mongodb+srv://${username}:${password}@cluster0.0fv6i1d.mongodb.net/?retryWrites=true&w=majority`;
   const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
